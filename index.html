@@ -766,6 +766,43 @@ html, body {
 }
 
 /* ============================================================
+   COUNTDOWN OVERLAY
+   ============================================================ */
+.countdown-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #000;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+.countdown-number {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+    font-size: 80px;
+    font-weight: 200;
+    color: rgba(255, 255, 255, 0.9);
+    opacity: 0;
+    transform: scale(1.5);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.countdown-number.visible {
+    opacity: 1;
+    transform: scale(1);
+}
+.countdown-number.fade-out {
+    opacity: 0;
+    transform: scale(0.8);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.countdown-overlay.hidden {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+/* ============================================================
    FADE TO BLACK
    ============================================================ */
 .fade-to-black {
@@ -1139,6 +1176,11 @@ html {
         </div>
     </div>
 
+    <!-- ==================== COUNTDOWN ==================== -->
+    <div class="countdown-overlay" id="countdownOverlay">
+        <span class="countdown-number" id="countdownNumber"></span>
+    </div>
+
     <!-- ==================== FADE TO BLACK ==================== -->
     <div class="fade-to-black" id="fadeToBlack"></div>
 
@@ -1282,6 +1324,40 @@ html {
         }, 1200);
     }
 
+    // ── Countdown ────────────────────────────────────────────────
+    function runCountdown(callback) {
+        const overlay = document.getElementById('countdownOverlay');
+        const numEl = document.getElementById('countdownNumber');
+        overlay.classList.remove('hidden');
+        overlay.style.opacity = '1';
+
+        // Alles hinter dem Countdown verstecken
+        document.getElementById('gridWrap').style.opacity = '0';
+        document.getElementById('dock').style.opacity = '0';
+        document.getElementById('wallpaperStress').style.opacity = '0';
+
+        const steps = [
+            { t: 0,    action: () => { numEl.textContent = '3'; numEl.className = 'countdown-number visible'; }},
+            { t: 800,  action: () => { numEl.classList.add('fade-out'); numEl.classList.remove('visible'); }},
+            { t: 1000, action: () => { numEl.textContent = '2'; numEl.className = 'countdown-number visible'; }},
+            { t: 1800, action: () => { numEl.classList.add('fade-out'); numEl.classList.remove('visible'); }},
+            { t: 2000, action: () => { numEl.textContent = '1'; numEl.className = 'countdown-number visible'; }},
+            { t: 2800, action: () => { numEl.classList.add('fade-out'); numEl.classList.remove('visible'); }},
+            // Letzte Sekunde: leer/schwarz
+            { t: 3000, action: () => { numEl.textContent = ''; }},
+            { t: 4000, action: () => {
+                // Countdown ausblenden, Stress-Screen zeigen
+                overlay.classList.add('hidden');
+                document.getElementById('gridWrap').style.cssText = '';
+                document.getElementById('dock').style.cssText = '';
+                document.getElementById('wallpaperStress').style.cssText = '';
+                callback();
+            }}
+        ];
+
+        steps.forEach(s => sched(s.action, s.t));
+    }
+
     // ── Reset everything ───────────────────────────────────────
     function resetAll() {
         clearAll();
@@ -1320,15 +1396,20 @@ html {
         document.getElementById('brandText').classList.remove('visible');
         document.getElementById('wallpaperStress').style.cssText = '';
 
+        // Countdown
+        const cOverlay = document.getElementById('countdownOverlay');
+        cOverlay.classList.remove('hidden');
+        cOverlay.style.opacity = '1';
+        document.getElementById('countdownNumber').className = 'countdown-number';
+        document.getElementById('countdownNumber').textContent = '';
+
         // Grid & dock
         document.getElementById('gridWrap').style.cssText = '';
         document.getElementById('dock').style.cssText = '';
     }
 
-    // ── MAIN ANIMATION ─────────────────────────────────────────
-    function startAnimation() {
-        resetAll();
-
+    // ── Notification Chaos (wird nach Countdown gestartet) ────
+    function startChaos() {
         // ────────────────────────────────────────────────────────
         // PHASE 1: Notification flood (0 – 2300ms)
         // ────────────────────────────────────────────────────────
@@ -1416,6 +1497,12 @@ html {
         // PHASE 3: Schwarz halten, dann langsam einblenden
         // ────────────────────────────────────────────────────────
         sched(() => revealCleanScreen(), 4600);
+    }
+
+    // ── MAIN ANIMATION ─────────────────────────────────────────
+    function startAnimation() {
+        resetAll();
+        runCountdown(() => startChaos());
     }
 
     // ── Init ───────────────────────────────────────────────────
