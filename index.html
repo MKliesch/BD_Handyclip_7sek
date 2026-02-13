@@ -800,6 +800,7 @@ html, body {
     opacity: 0;
     transition: opacity 0.3s ease;
     pointer-events: none;
+    visibility: hidden;
 }
 
 /* ============================================================
@@ -1348,9 +1349,9 @@ html {
             { t: 4000, action: () => {
                 // Countdown ausblenden, Stress-Screen zeigen
                 overlay.classList.add('hidden');
-                document.getElementById('gridWrap').style.cssText = '';
-                document.getElementById('dock').style.cssText = '';
-                document.getElementById('wallpaperStress').style.cssText = '';
+                document.getElementById('gridWrap').style.opacity = '1';
+                document.getElementById('dock').style.opacity = '1';
+                document.getElementById('wallpaperStress').style.opacity = '1';
                 callback();
             }}
         ];
