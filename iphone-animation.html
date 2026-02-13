@@ -1,0 +1,1493 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iPhone Notification Animation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    background: #000;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 10px;
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================================
+   PHONE FRAME
+   ============================================================ */
+.phone {
+    width: 393px;
+    height: 852px;
+    background: #1a1a1a;
+    border-radius: 55px;
+    padding: 8px;
+    position: relative;
+    box-shadow: 0 0 0 1.5px #444, 0 30px 80px rgba(0,0,0,0.6);
+    cursor: pointer;
+    flex-shrink: 0;
+    transform: scale(0.75);
+    transform-origin: top center;
+}
+
+.screen {
+    width: 100%;
+    height: 100%;
+    border-radius: 47px;
+    overflow: hidden;
+    position: relative;
+    background: #000;
+}
+
+/* Wallpaper layers */
+.wallpaper-stress {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: url('woman_labrador.jpg') center/cover no-repeat;
+    z-index: 1;
+    transition: opacity 0.8s ease;
+}
+.wallpaper-stress::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.15);
+}
+
+.wallpaper-calm {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(160deg,
+        #161d30 0%,
+        #1a2340 30%,
+        #1e2845 50%,
+        #2a2f45 65%,
+        #3d3540 78%,
+        #2e2a38 90%,
+        #181e32 100%);
+    z-index: 2;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+.wallpaper-calm.visible { opacity: 1; }
+
+/* ============================================================
+   STATUS BAR
+   ============================================================ */
+.status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 17px 30px 0;
+    height: 54px;
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    position: relative;
+    z-index: 10;
+}
+
+.status-right {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.dynamic-island {
+    width: 126px;
+    height: 37px;
+    background: #000;
+    border-radius: 20px;
+    position: absolute;
+    top: 11px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+}
+
+/* Battery CSS */
+.battery {
+    display: inline-flex;
+    align-items: center;
+}
+.battery-body {
+    width: 22px;
+    height: 11px;
+    border: 1.5px solid white;
+    border-radius: 3px;
+    padding: 1.5px;
+    display: flex;
+}
+.battery-fill {
+    width: 80%;
+    background: white;
+    border-radius: 1px;
+}
+.battery-tip {
+    width: 1.5px;
+    height: 5px;
+    background: white;
+    border-radius: 0 1px 1px 0;
+    margin-left: 1px;
+    align-self: center;
+}
+
+/* Signal bars */
+.signal-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 1.5px;
+    height: 11px;
+}
+.signal-bars .bar {
+    width: 3px;
+    background: white;
+    border-radius: 0.5px;
+}
+.signal-bars .bar:nth-child(1) { height: 3px; }
+.signal-bars .bar:nth-child(2) { height: 5px; }
+.signal-bars .bar:nth-child(3) { height: 8px; }
+.signal-bars .bar:nth-child(4) { height: 11px; }
+
+/* ============================================================
+   APP GRID & DOCK
+   ============================================================ */
+.app-grid-wrap {
+    padding: 18px 22px 0;
+    position: relative;
+    z-index: 5;
+    transition: opacity 0.4s ease;
+}
+
+.app-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 60px);
+    grid-template-rows: repeat(6, auto);
+    gap: 20px;
+    justify-content: space-between;
+}
+
+.dock {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 22px;
+    padding: 10px 30px 28px;
+    background: rgba(120, 120, 120, 0.12);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    z-index: 5;
+    transition: opacity 0.4s ease;
+}
+
+/* ============================================================
+   APP BASE STYLES
+   ============================================================ */
+.app {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    position: relative;
+    transition: transform 0.4s ease, opacity 0.4s ease;
+}
+.app.hiding {
+    transform: scale(0) !important;
+    opacity: 0 !important;
+}
+
+.app-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 13.5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    font-size: 28px;
+    color: white;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+    user-select: none;
+}
+
+.app-label {
+    font-size: 11px;
+    color: white;
+    text-align: center;
+    max-width: 72px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+    font-weight: 500;
+}
+
+/* ============================================================
+   BADGE
+   ============================================================ */
+.badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #FF3B30;
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+    min-width: 20px;
+    height: 20px;
+    border-radius: 10px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+    z-index: 6;
+    font-family: -apple-system, sans-serif;
+    letter-spacing: -0.3px;
+    border: none;
+}
+.badge.pop {
+    display: flex;
+    animation: badgePop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+.badge.update {
+    animation: badgeUpdate 0.3s ease;
+}
+
+@keyframes badgePop {
+    0%   { transform: scale(0); opacity: 0; }
+    30%  { transform: scale(3); opacity: 1; }
+    60%  { transform: scale(0.85); opacity: 1; }
+    80%  { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes badgeUpdate {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(2); }
+    100% { transform: scale(1); }
+}
+
+/* ============================================================
+   INDIVIDUAL ICON STYLES
+   ============================================================ */
+
+/* -- Kalender -- */
+.icon-kalender {
+    background: #FFF;
+    flex-direction: column;
+    padding: 0;
+    overflow: hidden;
+}
+.kal-header {
+    background: #FF3B30;
+    width: 100%;
+    height: 17px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 800;
+    color: white;
+    letter-spacing: 1px;
+}
+.kal-day {
+    font-size: 34px;
+    font-weight: 200;
+    color: #000;
+    line-height: 1;
+    margin-top: 1px;
+}
+
+/* -- Fotos -- */
+.icon-fotos {
+    background: linear-gradient(135deg, #FF6B6B 0%, #FECA57 25%, #48DBFB 50%, #A29BFE 75%, #FF6B6B 100%);
+    font-size: 30px;
+}
+
+/* -- Kamera -- */
+.icon-kamera {
+    background: #1C1C1E;
+}
+.cam-body {
+    width: 30px;
+    height: 22px;
+    border: 2.5px solid #8E8E93;
+    border-radius: 4px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.cam-body::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    right: 5px;
+    width: 10px;
+    height: 5px;
+    background: #8E8E93;
+    border-radius: 2px 2px 0 0;
+}
+.cam-lens {
+    width: 12px;
+    height: 12px;
+    border: 2px solid #8E8E93;
+    border-radius: 50%;
+}
+
+/* -- Wetter -- */
+.icon-wetter {
+    background: linear-gradient(180deg, #5AC8FA 0%, #4BA3E3 100%);
+    font-size: 32px;
+}
+
+/* -- Instagram -- */
+.icon-instagram {
+    background: linear-gradient(135deg, #F9CE34, #EE2A7B 50%, #6228D7);
+}
+.insta-cam {
+    width: 26px;
+    height: 26px;
+    border: 2.5px solid white;
+    border-radius: 7px;
+    position: relative;
+}
+.insta-cam::after {
+    content: '';
+    width: 10px;
+    height: 10px;
+    border: 2px solid white;
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+.insta-cam::before {
+    content: '';
+    width: 3.5px;
+    height: 3.5px;
+    background: white;
+    border-radius: 50%;
+    position: absolute;
+    top: 3px;
+    right: 3px;
+}
+
+/* -- TikTok -- */
+.icon-tiktok {
+    background: #010101;
+}
+.tt-note {
+    position: relative;
+    font-size: 30px;
+    color: white;
+    z-index: 1;
+}
+.tt-note::before {
+    content: '♪';
+    position: absolute;
+    left: -2px;
+    top: -1px;
+    color: #25F4EE;
+    opacity: 0.8;
+    z-index: -1;
+}
+.tt-note::after {
+    content: '♪';
+    position: absolute;
+    left: 2px;
+    top: 1px;
+    color: #FE2C55;
+    opacity: 0.8;
+    z-index: -1;
+}
+
+/* -- X -- */
+.icon-x {
+    background: #000;
+    border: 0.5px solid rgba(255,255,255,0.15);
+    font-size: 26px;
+    font-weight: 800;
+}
+
+/* -- YouTube -- */
+.icon-youtube {
+    background: #FF0000;
+    font-size: 24px;
+}
+
+/* -- Spotify -- */
+.icon-spotify {
+    background: #1DB954;
+    font-size: 30px;
+}
+
+/* -- Netflix -- */
+.icon-netflix {
+    background: #141414;
+    border: 0.5px solid rgba(255,255,255,0.1);
+    font-size: 32px;
+    font-weight: 900;
+    color: #E50914;
+}
+
+/* -- Zalando -- */
+.icon-zalando {
+    background: #FF6900;
+    font-size: 28px;
+    font-weight: 800;
+}
+
+/* -- Migros -- */
+.icon-migros {
+    background: #FF6600;
+    font-size: 28px;
+    font-weight: 800;
+}
+
+/* -- NZZ -- */
+.icon-nzz {
+    background: #F5F5F0;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: #1a1a1a;
+}
+
+/* -- SBB -- */
+.icon-sbb {
+    background: #EC0000;
+}
+.sbb-clock {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: white;
+    position: relative;
+}
+.sbb-clock .hand-h {
+    position: absolute;
+    width: 2px;
+    height: 9px;
+    background: #333;
+    top: 7px;
+    left: 50%;
+    transform: translateX(-50%) rotate(30deg);
+    transform-origin: bottom center;
+    border-radius: 1px;
+}
+.sbb-clock .hand-m {
+    position: absolute;
+    width: 1.5px;
+    height: 12px;
+    background: #333;
+    top: 4px;
+    left: 50%;
+    transform: translateX(-50%) rotate(-60deg);
+    transform-origin: bottom center;
+    border-radius: 1px;
+}
+.sbb-clock .hand-s {
+    position: absolute;
+    width: 5px;
+    height: 5px;
+    background: #EC0000;
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* -- Safari -- */
+.icon-safari {
+    background: linear-gradient(180deg, #5AC8FA 0%, #007AFF 100%);
+    font-size: 26px;
+}
+
+/* -- Mail -- */
+.icon-mail {
+    background: linear-gradient(180deg, #5AC8FA 0%, #007AFF 100%);
+    font-size: 26px;
+}
+
+/* -- Einstellungen -- */
+.icon-einstellungen {
+    background: linear-gradient(180deg, #8E8E93 0%, #636366 100%);
+    font-size: 30px;
+}
+
+/* -- Uhr -- */
+.icon-uhr {
+    background: #000;
+    border: 0.5px solid rgba(255,255,255,0.15);
+}
+.uhr-face {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid white;
+    position: relative;
+}
+.uhr-face .uh {
+    position: absolute;
+    width: 1.5px;
+    height: 10px;
+    background: white;
+    top: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    transform-origin: bottom center;
+    border-radius: 1px;
+}
+.uhr-face .um {
+    position: absolute;
+    width: 1.5px;
+    height: 8px;
+    background: white;
+    top: 50%;
+    left: 50%;
+    transform: translateX(-50%) rotate(90deg);
+    transform-origin: top center;
+    border-radius: 1px;
+}
+
+/* -- Rechner -- */
+.icon-rechner {
+    background: #1C1C1E;
+    border: 0.5px solid rgba(255,255,255,0.1);
+    font-size: 36px;
+    font-weight: 300;
+    color: #FF9500;
+}
+
+/* -- Notizen -- */
+.icon-notizen {
+    background: linear-gradient(180deg, #FFE27A 0%, #FFC800 100%);
+    color: #8B7000;
+    font-size: 28px;
+}
+
+/* -- Fitness -- */
+.icon-fitness {
+    background: #000;
+    border: 0.5px solid rgba(255,255,255,0.15);
+}
+.fit-rings {
+    width: 34px;
+    height: 34px;
+    position: relative;
+}
+.fit-ring {
+    position: absolute;
+    border-radius: 50%;
+    border-style: solid;
+}
+.fit-ring.r1 {
+    width: 34px; height: 34px; top: 0; left: 0;
+    border-width: 3.5px;
+    border-color: #FF3B30 #FF3B30 #FF3B30 rgba(255,59,48,0.3);
+    transform: rotate(-30deg);
+}
+.fit-ring.r2 {
+    width: 24px; height: 24px; top: 5px; left: 5px;
+    border-width: 3.5px;
+    border-color: #30D158 #30D158 rgba(48,209,88,0.3) rgba(48,209,88,0.3);
+    transform: rotate(-60deg);
+}
+.fit-ring.r3 {
+    width: 14px; height: 14px; top: 10px; left: 10px;
+    border-width: 3.5px;
+    border-color: #5AC8FA rgba(90,200,250,0.3) rgba(90,200,250,0.3) #5AC8FA;
+    transform: rotate(30deg);
+}
+
+/* -- Maps -- */
+.icon-maps {
+    background: linear-gradient(180deg, #63BE6B 0%, #4CAF50 60%, #F5E6B8 60%, #E8D5B7 100%);
+    font-size: 24px;
+}
+.maps-pin {
+    width: 28px;
+    height: 28px;
+    background: #007AFF;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    border: 2.5px solid white;
+    position: relative;
+}
+.maps-pin::after {
+    content: '';
+    width: 10px;
+    height: 10px;
+    background: white;
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* -- Podcasts -- */
+.icon-podcasts {
+    background: linear-gradient(180deg, #B660E0 0%, #8B2FC0 100%);
+    font-size: 26px;
+}
+
+/* -- Übersetzer -- */
+.icon-uebersetzer {
+    background: linear-gradient(180deg, #5AC8FA 0%, #007AFF 100%);
+    font-size: 18px;
+    font-weight: 600;
+}
+
+/* -- Telefon -- */
+.icon-telefon {
+    background: linear-gradient(180deg, #65D36E 0%, #2DB840 100%);
+    font-size: 60px;
+}
+
+/* -- Nachrichten -- */
+.icon-nachrichten {
+    background: linear-gradient(180deg, #69F076 0%, #42C84E 100%);
+    font-size: 28px;
+}
+
+/* -- WhatsApp -- */
+.icon-whatsapp {
+    background: #25D366;
+    font-size: 28px;
+    font-weight: 800;
+}
+
+/* -- Musik -- */
+.icon-musik {
+    background: linear-gradient(135deg, #FC5C7D 0%, #E91E63 100%);
+    font-size: 26px;
+}
+
+/* ============================================================
+   NOTIFICATION BANNERS
+   ============================================================ */
+.banner-layer {
+    position: absolute;
+    top: 55px;
+    left: 8px;
+    right: 8px;
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    pointer-events: none;
+}
+
+.banner {
+    background: rgba(45, 45, 50, 0.95);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border-radius: 18px;
+    padding: 11px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: white;
+    transform: translateY(-200%);
+    opacity: 0;
+}
+.banner.show {
+    transition: transform 0.35s cubic-bezier(0.21, 1.02, 0.73, 1), opacity 0.25s ease;
+    transform: translateY(0);
+    opacity: 1;
+}
+.banner.hide {
+    transition: transform 0.25s ease-in, opacity 0.2s ease;
+    transform: translateY(-200%);
+    opacity: 0;
+}
+
+.b-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+.b-body { flex: 1; min-width: 0; }
+.b-app {
+    font-size: 13px;
+    font-weight: 600;
+    opacity: 0.6;
+    margin-bottom: 1px;
+}
+.b-text {
+    font-size: 14px;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.b-time {
+    font-size: 12px;
+    opacity: 0.4;
+    flex-shrink: 0;
+    align-self: flex-start;
+    margin-top: 2px;
+}
+
+/* ============================================================
+   CENTER NOTIFICATIONS
+   ============================================================ */
+.center-layer {
+    position: absolute;
+    top: 46%;
+    left: 12px;
+    right: 12px;
+    transform: translateY(-50%);
+    z-index: 25;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+}
+
+.center-notif {
+    background: rgba(45, 45, 50, 0.92);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border-radius: 18px;
+    padding: 13px 14px;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    opacity: 0;
+    transform: scale(0.7) translateY(20px);
+}
+.center-notif.show {
+    transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.21, 1.02, 0.73, 1);
+    opacity: 1;
+    transform: scale(1) translateY(0);
+}
+.center-notif.hide {
+    transition: opacity 0.2s ease, transform 0.3s ease;
+    opacity: 0;
+    transform: scale(0.8) translateY(-10px);
+}
+
+/* ============================================================
+   FADE TO BLACK (Stress-Screen blendet ins Schwarze)
+   ============================================================ */
+.fade-to-black {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #000;
+    opacity: 0;
+    z-index: 40;
+    pointer-events: none;
+    transition: opacity 0.5s ease-in;
+}
+.fade-to-black.active {
+    opacity: 1;
+}
+
+/* ============================================================
+   CLEAN SCREEN (Phase 4)
+   ============================================================ */
+.clean-screen {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 15;
+    opacity: 0;
+    pointer-events: none;
+}
+.clean-screen.visible {
+    transition: opacity 0.8s ease;
+    opacity: 1;
+}
+
+/* BewusstDigital Schriftzug */
+.brand-text {
+    position: absolute;
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Lora', Georgia, serif;
+    font-size: 42px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    z-index: 16;
+}
+.brand-text.visible {
+    opacity: 1;
+}
+.brand-bewusst {
+    color: #F7C59F;
+}
+.brand-digital {
+    color: #E1E5EE;
+}
+.clean-screen .app {
+    opacity: 0;
+    transform: scale(0.5);
+}
+.clean-screen .app.pop-in {
+    transition: opacity 2s ease-out, transform 2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* Glass-Icons für Clean Screen */
+.clean-screen .app-icon {
+    background: rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow:
+        0 4px 16px rgba(0, 0, 0, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.85);
+}
+.clean-screen .sbb-clock {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+.clean-screen .sbb-clock .hand-h,
+.clean-screen .sbb-clock .hand-m {
+    background: rgba(255, 255, 255, 0.7);
+}
+.clean-screen .sbb-clock .hand-s {
+    background: rgba(255, 255, 255, 0.5);
+}
+.clean-screen .maps-pin {
+    background: rgba(255, 255, 255, 0.5);
+    border-color: rgba(255, 255, 255, 0.7);
+}
+.clean-screen .maps-pin::after {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Maps: oben links */
+.clean-top-left {
+    position: absolute;
+    top: 72px;
+    left: 26px;
+}
+
+/* Dock unten (4 Apps) */
+.clean-dock {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 22px;
+    padding: 10px 30px 28px;
+    background: rgba(120, 120, 120, 0.12);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+}
+
+/* ============================================================
+   RESTART HINT
+   ============================================================ */
+/* Restart-Button = Dynamic Island (unsichtbar, klickbar) */
+.restart-btn {
+    position: absolute;
+    top: 11px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 126px;
+    height: 37px;
+    z-index: 60;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    opacity: 0;
+}
+.restart-btn.visible {
+    opacity: 1;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-height: 620px) {
+    .phone { transform: scale(0.55); }
+}
+</style>
+</head>
+<body>
+
+<div class="phone" id="phone">
+    <div class="screen">
+        <!-- Wallpapers -->
+        <div class="wallpaper-stress" id="wallpaperStress"></div>
+        <div class="wallpaper-calm" id="wallpaperCalm"></div>
+        <div class="brand-text" id="brandText"><span class="brand-bewusst">Bewusst</span><span class="brand-digital">Digital</span></div>
+
+        <!-- Dynamic Island -->
+        <div class="dynamic-island"></div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <span>9:41</span>
+            <div class="status-right">
+                <div class="signal-bars">
+                    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                </div>
+                <span style="font-size:13px; margin: 0 2px;">5G</span>
+                <div class="battery">
+                    <div class="battery-body"><div class="battery-fill"></div></div>
+                    <div class="battery-tip"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== APP GRID ==================== -->
+        <div class="app-grid-wrap" id="gridWrap">
+            <div class="app-grid">
+
+                <!-- Row 1 -->
+                <div class="app" data-app="kalender">
+                    <div class="app-icon icon-kalender">
+                        <div class="kal-header">FR</div>
+                        <div class="kal-day">13</div>
+                        <span class="badge"></span>
+                    </div>
+                    <span class="app-label">Kalender</span>
+                </div>
+
+                <div class="app" data-app="fotos">
+                    <div class="app-icon icon-fotos">✿<span class="badge"></span></div>
+                    <span class="app-label">Fotos</span>
+                </div>
+
+                <div class="app" data-app="kamera">
+                    <div class="app-icon icon-kamera">
+                        <div class="cam-body"><div class="cam-lens"></div></div>
+                        <span class="badge"></span>
+                    </div>
+                    <span class="app-label">Kamera</span>
+                </div>
+
+                <div class="app" data-app="wetter">
+                    <div class="app-icon icon-wetter">☀<span class="badge"></span></div>
+                    <span class="app-label">Wetter</span>
+                </div>
+
+                <!-- Row 2 -->
+                <div class="app" data-app="instagram">
+                    <div class="app-icon icon-instagram">
+                        <div class="insta-cam"></div>
+                        <span class="badge"></span>
+                    </div>
+                    <span class="app-label">Instagram</span>
+                </div>
+
+                <div class="app" data-app="tiktok">
+                    <div class="app-icon icon-tiktok">
+                        <span class="tt-note">♪</span>
+                        <span class="badge"></span>
+                    </div>
+                    <span class="app-label">TikTok</span>
+                </div>
+
+                <div class="app" data-app="x">
+                    <div class="app-icon icon-x">𝕏<span class="badge"></span></div>
+                    <span class="app-label">X</span>
+                </div>
+
+                <div class="app" data-app="youtube">
+                    <div class="app-icon icon-youtube">▶<span class="badge"></span></div>
+                    <span class="app-label">YouTube</span>
+                </div>
+
+                <!-- Row 3 -->
+                <div class="app" data-app="spotify">
+                    <div class="app-icon icon-spotify">♪<span class="badge"></span></div>
+                    <span class="app-label">Spotify</span>
+                </div>
+
+                <div class="app" data-app="netflix">
+                    <div class="app-icon icon-netflix">N<span class="badge"></span></div>
+                    <span class="app-label">Netflix</span>
+                </div>
+
+                <div class="app" data-app="zalando">
+                    <div class="app-icon icon-zalando">Z<span class="badge"></span></div>
+                    <span class="app-label">Zalando</span>
+                </div>
+
+                <div class="app" data-app="migros">
+                    <div class="app-icon icon-migros">M<span class="badge"></span></div>
+                    <span class="app-label">Migros</span>
+                </div>
+
+                <!-- Row 4 -->
+                <div class="app" data-app="nzz">
+                    <div class="app-icon icon-nzz">N<span class="badge"></span></div>
+                    <span class="app-label">NZZ</span>
+                </div>
+
+                <div class="app" data-app="sbb" data-essential="true">
+                    <div class="app-icon icon-sbb">
+                        <div class="sbb-clock">
+                            <div class="hand-h"></div>
+                            <div class="hand-m"></div>
+                            <div class="hand-s"></div>
+                        </div>
+                        <span class="badge"></span>
+                    </div>
+                    <span class="app-label">SBB</span>
+                </div>
+
+                <div class="app" data-app="safari">
+                    <div class="app-icon icon-safari">⊕<span class="badge"></span></div>
+                    <span class="app-label">Safari</span>
+                </div>
+
+                <div class="app" data-app="mail">
+                    <div class="app-icon icon-mail">✉<span class="badge"></span></div>
+                    <span class="app-label">Mail</span>
+                </div>
+
+                <!-- Row 5 -->
+                <div class="app" data-app="einstellungen">
+                    <div class="app-icon icon-einstellungen">⚙<span class="badge"></span></div>
+                    <span class="app-label">Einstellungen</span>
+                </div>
+
+                <div class="app" data-app="uhr">
+                    <div class="app-icon icon-uhr">
+                        <div class="uhr-face"><div class="uh"></div><div class="um"></div></div>
+                        <span class="badge"></span>
+                    </div>
+                    <span class="app-label">Uhr</span>
+                </div>
+
+                <div class="app" data-app="rechner">
+                    <div class="app-icon icon-rechner">÷<span class="badge"></span></div>
+                    <span class="app-label">Rechner</span>
+                </div>
+
+                <div class="app" data-app="notizen">
+                    <div class="app-icon icon-notizen">✎<span class="badge"></span></div>
+                    <span class="app-label">Notizen</span>
+                </div>
+
+                <!-- Row 6 -->
+                <div class="app" data-app="fitness">
+                    <div class="app-icon icon-fitness">
+                        <div class="fit-rings">
+                            <div class="fit-ring r1"></div>
+                            <div class="fit-ring r2"></div>
+                            <div class="fit-ring r3"></div>
+                        </div>
+                        <span class="badge"></span>
+                    </div>
+                    <span class="app-label">Fitness</span>
+                </div>
+
+                <div class="app" data-app="maps" data-essential="true">
+                    <div class="app-icon icon-maps">
+                        <div class="maps-pin"></div>
+                        <span class="badge"></span>
+                    </div>
+                    <span class="app-label">Maps</span>
+                </div>
+
+                <div class="app" data-app="podcasts">
+                    <div class="app-icon icon-podcasts">🎙<span class="badge"></span></div>
+                    <span class="app-label">Podcasts</span>
+                </div>
+
+                <div class="app" data-app="uebersetzer">
+                    <div class="app-icon icon-uebersetzer">文A<span class="badge"></span></div>
+                    <span class="app-label">Übersetzer</span>
+                </div>
+
+            </div><!-- /app-grid -->
+        </div><!-- /app-grid-wrap -->
+
+        <!-- ==================== DOCK ==================== -->
+        <div class="dock" id="dock">
+            <div class="app" data-app="telefon" data-essential="true">
+                <div class="app-icon icon-telefon">✆<span class="badge"></span></div>
+                <span class="app-label">Telefon</span>
+            </div>
+
+            <div class="app" data-app="nachrichten" data-essential="true">
+                <div class="app-icon icon-nachrichten">💬<span class="badge"></span></div>
+                <span class="app-label">Nachrichten</span>
+            </div>
+
+            <div class="app" data-app="whatsapp" data-essential="true">
+                <div class="app-icon icon-whatsapp">W<span class="badge"></span></div>
+                <span class="app-label">WhatsApp</span>
+            </div>
+
+            <div class="app" data-app="musik">
+                <div class="app-icon icon-musik">♫<span class="badge"></span></div>
+                <span class="app-label">Musik</span>
+            </div>
+        </div>
+
+        <!-- ==================== NOTIFICATION LAYERS ==================== -->
+        <div class="banner-layer" id="bannerLayer"></div>
+
+        <div class="center-layer" id="centerLayer">
+            <div class="center-notif" data-cn="0">
+                <div class="b-icon" style="background:#FF3B30">📅</div>
+                <div class="b-body">
+                    <div class="b-app">Kalender</div>
+                    <div class="b-text">Team Meeting in 15 Minuten</div>
+                </div>
+            </div>
+            <div class="center-notif" data-cn="1">
+                <div class="b-icon" style="background:linear-gradient(180deg,#65D36E,#2DB840)">✆</div>
+                <div class="b-body">
+                    <div class="b-app">Telefon</div>
+                    <div class="b-text">2 verpasste Anrufe von Papa</div>
+                </div>
+            </div>
+            <div class="center-notif" data-cn="2">
+                <div class="b-icon" style="background:#F5F5F0; color:#1a1a1a; font-family:Georgia,serif; font-weight:700; font-size:14px;">N</div>
+                <div class="b-body">
+                    <div class="b-app">NZZ · Breaking News</div>
+                    <div class="b-text">Schweizer Börse erreicht neues Allzeithoch</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== FADE TO BLACK ==================== -->
+        <div class="fade-to-black" id="fadeToBlack"></div>
+
+        <!-- ==================== CLEAN SCREEN (Phase 4) ==================== -->
+        <div class="clean-screen" id="cleanScreen">
+            <!-- SBB: oben links -->
+            <div class="clean-top-left">
+                <div class="app">
+                    <div class="app-icon icon-sbb">
+                        <div class="sbb-clock">
+                            <div class="hand-h"></div>
+                            <div class="hand-m"></div>
+                            <div class="hand-s"></div>
+                        </div>
+                    </div>
+                    <span class="app-label">SBB</span>
+                </div>
+            </div>
+
+            <!-- Dock: 4 essentielle Apps unten -->
+            <div class="clean-dock">
+                <div class="app">
+                    <div class="app-icon icon-telefon">✆</div>
+                    <span class="app-label">Telefon</span>
+                </div>
+                <div class="app">
+                    <div class="app-icon icon-nachrichten">💬</div>
+                    <span class="app-label">Nachrichten</span>
+                </div>
+                <div class="app">
+                    <div class="app-icon icon-whatsapp">W</div>
+                    <span class="app-label">WhatsApp</span>
+                </div>
+                <div class="app">
+                    <div class="app-icon icon-maps">
+                        <div class="maps-pin"></div>
+                    </div>
+                    <span class="app-label">Maps</span>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /screen -->
+    <div class="restart-btn" id="restartBtn"></div>
+</div><!-- /phone -->
+
+<!-- ============================================================
+     JAVASCRIPT – Animation Orchestration
+     ============================================================ -->
+<script>
+(function() {
+    'use strict';
+
+    let timeouts = [];
+
+    function sched(fn, delay) {
+        timeouts.push(setTimeout(fn, delay));
+    }
+
+    function clearAll() {
+        timeouts.forEach(clearTimeout);
+        timeouts = [];
+    }
+
+    // ── Badge helpers ──────────────────────────────────────────
+    function showBadge(appId, count) {
+        const el = document.querySelector(`[data-app="${appId}"] .badge`);
+        if (!el) return;
+        const text = count > 99 ? '99+' : String(count);
+
+        if (!el.classList.contains('pop')) {
+            el.textContent = text;
+            el.classList.add('pop');
+        } else {
+            el.textContent = text;
+            el.classList.remove('update');
+            void el.offsetWidth; // reflow
+            el.classList.add('update');
+        }
+    }
+
+    // ── Banner helpers ─────────────────────────────────────────
+    function addBanner(bg, symbol, appName, text) {
+        const layer = document.getElementById('bannerLayer');
+        const div = document.createElement('div');
+        div.className = 'banner';
+        div.innerHTML = `
+            <div class="b-icon" style="background:${bg}">${symbol}</div>
+            <div class="b-body">
+                <div class="b-app">${appName}</div>
+                <div class="b-text">${text}</div>
+            </div>
+            <div class="b-time">jetzt</div>
+        `;
+        layer.appendChild(div);
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => { div.classList.add('show'); });
+        });
+    }
+
+    // ── Center notification helper ─────────────────────────────
+    function showCenterNotif(index) {
+        const el = document.querySelector(`[data-cn="${index}"]`);
+        if (el) el.classList.add('show');
+    }
+
+    // ── Fade to black starten ───────────────────────────────────
+    function fadeToBlack() {
+        document.getElementById('fadeToBlack').classList.add('active');
+    }
+
+    // ── Hinter Schwarz: alles aufräumen ──────────────────────
+    function hideEverything() {
+        document.querySelectorAll('.banner').forEach(b => b.remove());
+        document.querySelectorAll('.center-notif').forEach(n => {
+            n.classList.remove('show', 'hide');
+        });
+        document.querySelectorAll('.badge.pop').forEach(b => {
+            b.classList.remove('pop', 'update');
+            b.style.display = 'none';
+        });
+        document.getElementById('gridWrap').style.opacity = '0';
+        document.getElementById('dock').style.opacity = '0';
+        document.getElementById('wallpaperStress').style.opacity = '0';
+    }
+
+    // ── Aus Schwarz langsam einblenden ────────────────────────
+    function revealCleanScreen() {
+        // Schwarzes Overlay ausblenden
+        const ftb = document.getElementById('fadeToBlack');
+        ftb.style.transition = 'opacity 2s ease';
+        ftb.style.opacity = '0';
+
+        // Calm wallpaper + Schriftzug einblenden
+        document.getElementById('wallpaperCalm').classList.add('visible');
+        document.getElementById('brandText').classList.add('visible');
+
+        // Alle Apps gleichzeitig, langsam einblenden
+        sched(() => {
+            const cs = document.getElementById('cleanScreen');
+            cs.classList.add('visible');
+            cs.querySelectorAll('.app').forEach(a => a.classList.add('pop-in'));
+        }, 1200);
+    }
+
+    // ── Reset everything ───────────────────────────────────────
+    function resetAll() {
+        clearAll();
+
+        // Badges
+        document.querySelectorAll('.badge').forEach(b => {
+            b.classList.remove('pop', 'update');
+            b.style.cssText = '';
+            b.style.display = '';
+            b.textContent = '';
+        });
+
+        // Banners
+        document.getElementById('bannerLayer').innerHTML = '';
+
+        // Center notifications
+        document.querySelectorAll('.center-notif').forEach(n => {
+            n.classList.remove('show', 'hide');
+        });
+
+        // Apps
+        document.querySelectorAll('.app').forEach(a => {
+            a.classList.remove('hiding');
+        });
+
+        // Clean screen
+        const cs = document.getElementById('cleanScreen');
+        cs.classList.remove('visible');
+        cs.querySelectorAll('.app').forEach(a => a.classList.remove('pop-in'));
+
+        // Overlays & wallpapers
+        const ftb = document.getElementById('fadeToBlack');
+        ftb.classList.remove('active');
+        ftb.style.cssText = '';
+        document.getElementById('wallpaperCalm').classList.remove('visible');
+        document.getElementById('brandText').classList.remove('visible');
+        document.getElementById('wallpaperStress').style.cssText = '';
+
+        // Grid & dock
+        document.getElementById('gridWrap').style.cssText = '';
+        document.getElementById('dock').style.cssText = '';
+
+        // Restart hint
+        document.getElementById('restartBtn').classList.remove('visible');
+    }
+
+    // ── MAIN ANIMATION ─────────────────────────────────────────
+    function startAnimation() {
+        resetAll();
+
+        // ────────────────────────────────────────────────────────
+        // PHASE 1: Notification flood (0 – 2300ms)
+        // ────────────────────────────────────────────────────────
+
+        // Badges – first wave
+        sched(() => showBadge('whatsapp', 1),     0);
+        sched(() => showBadge('instagram', 1),    100);
+        sched(() => showBadge('mail', 3),         190);
+        sched(() => showBadge('tiktok', 1),       260);
+        sched(() => showBadge('nachrichten', 1),  350);
+
+        // Banner 1
+        sched(() => addBanner('#25D366', 'W', 'WhatsApp', 'Marco: Hey, hast du heute Abend Zeit?'), 350);
+
+        sched(() => showBadge('x', 2),            440);
+        sched(() => showBadge('youtube', 1),      530);
+
+        // Banner 2
+        sched(() => addBanner('linear-gradient(135deg,#F9CE34,#EE2A7B,#6228D7)', '◻', 'Instagram', '@sarah_m hat dein Foto geliked +3 weitere'), 610);
+
+        sched(() => showBadge('nzz', 1),          680);
+        sched(() => showBadge('spotify', 1),      740);
+        sched(() => showBadge('whatsapp', 5),     830);
+        sched(() => showBadge('instagram', 8),    900);
+
+        // Banner 3
+        sched(() => addBanner('#F5F5F0', '<span style="color:#1a1a1a;font-family:Georgia,serif;font-weight:700">N</span>', 'NZZ', 'BREAKING: Neue Entwicklungen im Bundesrat'), 960);
+
+        sched(() => showBadge('zalando', 1),      1010);
+        sched(() => showBadge('migros', 1),       1070);
+        sched(() => showBadge('mail', 8),         1120);
+        sched(() => showBadge('nachrichten', 3),  1170);
+
+        // Center Notification 1
+        sched(() => showCenterNotif(0),           1230);
+
+        // Banner 4
+        sched(() => addBanner('#010101', '<span style="color:#FE2C55">♪</span>', 'TikTok', 'Dein Video hat 1.2K Views erreicht 🎉'), 1320);
+
+        sched(() => showBadge('tiktok', 7),       1360);
+        sched(() => showBadge('whatsapp', 14),    1410);
+        sched(() => showBadge('youtube', 3),      1440);
+        sched(() => showBadge('x', 8),            1480);
+
+        // Center Notification 2
+        sched(() => showCenterNotif(1),           1540);
+
+        // Banner 5
+        sched(() => addBanner('linear-gradient(180deg,#5AC8FA,#007AFF)', '✉', 'Mail', 'Amazon: Ihre Bestellung wurde versendet'), 1580);
+
+        sched(() => showBadge('instagram', 23),   1630);
+        sched(() => showBadge('nzz', 5),          1670);
+        sched(() => showBadge('spotify', 2),      1700);
+
+        // Banner 6
+        sched(() => addBanner('linear-gradient(180deg,#69F076,#42C84E)', '💬', 'Nachrichten', 'Mama: Rufst du mich bitte an? 📞'), 1760);
+
+        sched(() => showBadge('whatsapp', 34),    1800);
+        sched(() => showBadge('nachrichten', 7),  1850);
+        sched(() => showBadge('mail', 16),        1890);
+
+        // Center Notification 3
+        sched(() => showCenterNotif(2),           1940);
+
+        sched(() => showBadge('tiktok', 15),      1980);
+        sched(() => showBadge('whatsapp', 52),    2020);
+        sched(() => showBadge('instagram', 47),   2060);
+        sched(() => showBadge('x', 19),           2100);
+        sched(() => showBadge('youtube', 8),      2140);
+        sched(() => showBadge('whatsapp', 99),    2180);
+        sched(() => showBadge('zalando', 3),      2220);
+        sched(() => showBadge('migros', 2),       2250);
+        sched(() => showBadge('nachrichten', 12), 2270);
+        sched(() => showBadge('mail', 24),        2300);
+
+        // ────────────────────────────────────────────────────────
+        // PHASE 2: Fade to black (ab 2600ms, 0.5s transition)
+        // ────────────────────────────────────────────────────────
+        sched(() => fadeToBlack(), 2600);
+
+        // Bei Schwarz: alles dahinter aufräumen
+        sched(() => hideEverything(), 3100);
+
+        // ────────────────────────────────────────────────────────
+        // PHASE 3: Schwarz halten, dann langsam einblenden
+        // ────────────────────────────────────────────────────────
+        sched(() => revealCleanScreen(), 4600);
+
+        // Restart bereit nach Animation
+        sched(() => {
+            document.getElementById('restartBtn').classList.add('visible');
+        }, 9300);
+    }
+
+    // ── Init ───────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+        // Auto-start after brief delay
+        setTimeout(startAnimation, 600);
+
+        // Click to restart
+        document.getElementById('phone').addEventListener('click', () => {
+            startAnimation();
+        });
+
+        document.getElementById('restartBtn').addEventListener('click', () => {
+            startAnimation();
+        });
+    });
+
+})();
+</script>
+
+</body>
+</html>
