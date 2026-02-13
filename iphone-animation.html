@@ -1158,29 +1158,6 @@ body {
         <!-- ==================== NOTIFICATION LAYERS ==================== -->
         <div class="banner-layer" id="bannerLayer"></div>
 
-        <div class="center-layer" id="centerLayer">
-            <div class="center-notif" data-cn="0">
-                <div class="b-icon" style="background:#FF3B30">📅</div>
-                <div class="b-body">
-                    <div class="b-app">Kalender</div>
-                    <div class="b-text">Team Meeting in 15 Minuten</div>
-                </div>
-            </div>
-            <div class="center-notif" data-cn="1">
-                <div class="b-icon" style="background:linear-gradient(180deg,#65D36E,#2DB840)">✆</div>
-                <div class="b-body">
-                    <div class="b-app">Telefon</div>
-                    <div class="b-text">2 verpasste Anrufe von Papa</div>
-                </div>
-            </div>
-            <div class="center-notif" data-cn="2">
-                <div class="b-icon" style="background:#F5F5F0; color:#1a1a1a; font-family:Georgia,serif; font-weight:700; font-size:14px;">N</div>
-                <div class="b-body">
-                    <div class="b-app">NZZ · Breaking News</div>
-                    <div class="b-text">Schweizer Börse erreicht neues Allzeithoch</div>
-                </div>
-            </div>
-        </div>
 
         <!-- ==================== FADE TO BLACK ==================== -->
         <div class="fade-to-black" id="fadeToBlack"></div>
@@ -1410,9 +1387,6 @@ body {
         sched(() => showBadge('mail', 8),         1120);
         sched(() => showBadge('nachrichten', 3),  1170);
 
-        // Center Notification 1
-        sched(() => showCenterNotif(0),           1230);
-
         // Banner 4
         sched(() => addBanner('#010101', '<span style="color:#FE2C55">♪</span>', 'TikTok', 'Dein Video hat 1.2K Views erreicht 🎉'), 1320);
 
@@ -1420,9 +1394,6 @@ body {
         sched(() => showBadge('whatsapp', 14),    1410);
         sched(() => showBadge('youtube', 3),      1440);
         sched(() => showBadge('x', 8),            1480);
-
-        // Center Notification 2
-        sched(() => showCenterNotif(1),           1540);
 
         // Banner 5
         sched(() => addBanner('linear-gradient(180deg,#5AC8FA,#007AFF)', '✉', 'Mail', 'Amazon: Ihre Bestellung wurde versendet'), 1580);
@@ -1437,9 +1408,6 @@ body {
         sched(() => showBadge('whatsapp', 34),    1800);
         sched(() => showBadge('nachrichten', 7),  1850);
         sched(() => showBadge('mail', 16),        1890);
-
-        // Center Notification 3
-        sched(() => showCenterNotif(2),           1940);
 
         sched(() => showBadge('tiktok', 15),      1980);
         sched(() => showBadge('whatsapp', 52),    2020);
