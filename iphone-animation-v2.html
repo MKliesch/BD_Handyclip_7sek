@@ -88,17 +88,29 @@ body {
 .wallpaper-calm {
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: linear-gradient(160deg,
-        #161d30 0%,
-        #1a2340 30%,
-        #1e2845 50%,
-        #2a2f45 65%,
-        #3d3540 78%,
-        #2e2a38 90%,
-        #181e32 100%);
+    background:
+        radial-gradient(ellipse 120% 50% at 70% 85%, rgba(247,197,159,0.16) 0%, transparent 70%),
+        radial-gradient(ellipse 90% 40% at 30% 65%, rgba(247,197,159,0.10) 0%, transparent 60%),
+        linear-gradient(160deg,
+            #332838 0%,
+            #3c3048 30%,
+            #443852 50%,
+            #4e4260 65%,
+            #564a64 78%,
+            #443a50 90%,
+            #332a3c 100%);
     z-index: 2;
     opacity: 0;
     transition: opacity 0.5s ease;
+}
+.wallpaper-calm::before {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 55%;
+    background:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 120' preserveAspectRatio='none'%3E%3Cpath d='M0,60 C80,20 160,90 240,50 C320,10 360,70 400,40 L400,120 L0,120Z' fill='rgba(247,197,159,0.06)'/%3E%3Cpath d='M0,80 C60,50 140,100 220,65 C300,30 350,80 400,60 L400,120 L0,120Z' fill='rgba(247,197,159,0.04)'/%3E%3C/svg%3E") bottom/100% auto no-repeat;
+    pointer-events: none;
 }
 .wallpaper-calm.visible { opacity: 1; }
 
@@ -943,8 +955,8 @@ body {
     'use strict';
 
     const C = 2000;                         // calm start before chaos
-    const TRANSITION_START = 3300 + C;      // 5300
-    const ENDCARD_START    = 8400;
+    const TRANSITION_START = 2800 + C;      // 4800
+    const ENDCARD_START    = 7500;
     const ENDCARD_DURATION = 2000;
 
     let timeouts = [];
@@ -1325,7 +1337,7 @@ body {
         sched(() => showMeta('metaLeft'),  C+1000);
         sched(() => showMeta('metaRight'), C+2200);
         sched(() => hideMeta('metaLeft'),  C+2400);
-        sched(() => hideMeta('metaRight'), C+3900);
+        sched(() => hideMeta('metaRight'), C+3400);
 
         // PHASE 2: Slide Transition
         sched(() => startTransition(), TRANSITION_START);
