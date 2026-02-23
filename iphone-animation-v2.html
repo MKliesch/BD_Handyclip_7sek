@@ -6,7 +6,7 @@
 <title>iPhone Notification Animation – V2 Slide Transition</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 /* ============================================================
    RESET & BASE
@@ -14,11 +14,15 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-    background: #000;
+    background: radial-gradient(
+        1200px circle at 30% 30%,
+        #141a2a 0%,
+        #07080c 55%,
+        #000 100%
+    );
     display: flex;
     justify-content: center;
-    align-items: flex-start;
-    padding-top: 10px;
+    align-items: center;
     min-height: 100vh;
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
     overflow: hidden;
@@ -29,6 +33,16 @@ body {
 /* ============================================================
    PHONE FRAME
    ============================================================ */
+.stage {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: min(4vw, 48px);
+    padding: clamp(16px, 3vw, 56px);
+}
+
 .phone {
     width: 393px;
     height: 852px;
@@ -39,8 +53,12 @@ body {
     box-shadow: 0 0 0 1.5px #444, 0 30px 80px rgba(0,0,0,0.6);
     cursor: pointer;
     flex-shrink: 0;
-    transform: scale(0.75);
-    transform-origin: top center;
+    transform: scale(0.78);
+    transform-origin: center center;
+    transition: filter 650ms ease, opacity 650ms ease;
+}
+.phone.dimmed {
+    filter: brightness(0.25);
 }
 
 .screen {
@@ -478,19 +496,6 @@ body {
     pointer-events: auto;
 }
 
-/* BewusstDigital Schriftzug */
-.brand-text {
-    position: absolute;
-    top: 45%; left: 50%;
-    transform: translate(-50%, -50%);
-    font-family: 'Lora', Georgia, serif;
-    font-size: 42px; font-weight: 600;
-    letter-spacing: 0.5px; white-space: nowrap;
-    opacity: 0;
-    transition: opacity 1s ease;
-    z-index: 16;
-}
-.brand-text.visible { opacity: 1; }
 .brand-bewusst { color: #F7C59F; }
 .brand-digital { color: #E1E5EE; }
 
@@ -512,6 +517,8 @@ body {
 .clean-screen .sbb-clock .hand-s { background: rgba(255, 255, 255, 0.5); }
 .clean-screen .maps-pin { background: rgba(255, 255, 255, 0.5); border-color: rgba(255, 255, 255, 0.7); }
 .clean-screen .maps-pin::after { background: rgba(255, 255, 255, 0.3); }
+.clean-screen .kal-header { background: rgba(255, 255, 255, 0.2); color: rgba(255,255,255,0.85); }
+.clean-screen .kal-day { color: rgba(255, 255, 255, 0.85); }
 
 /* SBB: oben links */
 .clean-top-left { position: absolute; top: 72px; left: 26px; }
@@ -564,6 +571,87 @@ body {
 .clone-glass .kal-day { color: rgba(255, 255, 255, 0.85); }
 
 /* ============================================================
+   META-NOTIFICATIONS (neben dem Handy)
+   ============================================================ */
+.meta-note {
+    position: fixed;
+    width: auto;
+    white-space: nowrap;
+    padding: clamp(14px, 1.4vw, 24px) clamp(24px, 2.5vw, 40px);
+    border-radius: 28px;
+    background: #007AFF;
+    box-shadow: 0 20px 60px rgba(0, 122, 255, 0.30), 0 8px 24px rgba(0,0,0,0.35);
+    color: #fff;
+    font-family: 'Open Sans', -apple-system, sans-serif;
+    font-size: clamp(75px, 5.9vw, 110px);
+    line-height: 1.25;
+    font-weight: 400;
+    opacity: 0;
+    transform: translateY(-30px);
+    transition: opacity 420ms ease, transform 420ms ease;
+    pointer-events: none;
+    z-index: 100;
+}
+.meta-left {
+    top: 8vh;
+    left: 2vw;
+}
+.meta-right {
+    top: 50%;
+    right: 2vw;
+    transform: translateY(calc(-50% - 30px));
+}
+.meta-note.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+.meta-right.show {
+    transform: translateY(-50%);
+}
+
+/* ============================================================
+   ENDCARD OVERLAY
+   ============================================================ */
+.endcard {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%,-50%) scale(0.15);
+    text-align: center;
+    opacity: 0;
+    transition: opacity 600ms ease, transform 800ms cubic-bezier(0.22, 0.61, 0.36, 1);
+    z-index: 200;
+    pointer-events: none;
+}
+.endcard.show {
+    opacity: 1;
+    transform: translate(-50%,-50%) scale(1);
+}
+.endcard-brand {
+    font-family: 'Lora', Georgia, serif;
+    font-size: clamp(75px, 9vw, 180px);
+    font-weight: 600;
+    letter-spacing: 0.6px;
+    white-space: nowrap;
+    text-shadow: 0 12px 40px rgba(0,0,0,0.55);
+}
+.brand-ch {
+    color: #E1E5EE;
+    opacity: 0;
+    transition: opacity 500ms ease;
+}
+.brand-ch.show {
+    opacity: 1;
+}
+.endcard-claim {
+    margin-top: 20px;
+    font-family: 'Open Sans', -apple-system, sans-serif;
+    font-size: clamp(75px, 5.9vw, 110px);
+    font-weight: 400;
+    color: rgba(255,255,255,0.90);
+}
+
+/* ============================================================
    RESTART BUTTON (Dynamic Island area)
    ============================================================ */
 .restart-btn {
@@ -578,19 +666,31 @@ body {
 /* ============================================================
    RESPONSIVE
    ============================================================ */
-@media (max-height: 620px) {
-    .phone { transform: scale(0.55); }
+@media (max-height: 700px) {
+    .phone { transform: scale(0.62); }
+    .meta-note { font-size: clamp(40px, 4.5vw, 70px); padding: 20px 26px; }
+}
+@media (max-width: 1100px) {
+    .meta-note { font-size: clamp(40px, 4.5vw, 65px); }
+}
+@media (max-width: 640px) {
+    .meta-note { display: none; }
 }
 </style>
 </head>
 <body>
 
-<div class="phone" id="phone">
+<div class="stage" id="stage">
+
+    <div class="meta-left meta-note" id="metaLeft">
+        So lernt dein Gehirn &hellip;
+    </div>
+
+    <div class="phone" id="phone">
     <div class="screen" id="screen">
         <!-- Wallpapers -->
         <div class="wallpaper-stress" id="wallpaperStress"></div>
         <div class="wallpaper-calm" id="wallpaperCalm"></div>
-        <div class="brand-text" id="brandText"><span class="brand-bewusst">Bewusst</span><span class="brand-digital">Digital</span></div>
 
         <!-- Dynamic Island -->
         <div class="dynamic-island"></div>
@@ -614,7 +714,7 @@ body {
         <div class="app-grid-wrap" id="gridWrap">
             <div class="app-grid">
                 <!-- Row 1 -->
-                <div class="app" data-app="kalender">
+                <div class="app" data-app="kalender" data-essential="true">
                     <div class="app-icon icon-kalender">
                         <div class="kal-header">FR</div>
                         <div class="kal-day">13</div>
@@ -657,7 +757,7 @@ body {
                 </div>
 
                 <!-- Row 3 -->
-                <div class="app" data-app="whatsapp" data-essential="true">
+                <div class="app" data-app="whatsapp">
                     <div class="app-icon icon-whatsapp">W<span class="badge"></span></div>
                     <span class="app-label">WhatsApp</span>
                 </div>
@@ -804,9 +904,12 @@ body {
                     <div class="app-icon icon-nachrichten">💬</div>
                     <span class="app-label">Nachrichten</span>
                 </div>
-                <div class="app" data-clean="whatsapp">
-                    <div class="app-icon icon-whatsapp">W</div>
-                    <span class="app-label">WhatsApp</span>
+                <div class="app" data-clean="kalender">
+                    <div class="app-icon icon-kalender">
+                        <div class="kal-header">FR</div>
+                        <div class="kal-day">13</div>
+                    </div>
+                    <span class="app-label">Kalender</span>
                 </div>
                 <div class="app" data-clean="maps">
                     <div class="app-icon icon-maps">
@@ -821,12 +924,28 @@ body {
     <div class="restart-btn" id="restartBtn"></div>
 </div><!-- /phone -->
 
+    <div class="meta-right meta-note" id="metaRight">
+        &hellip;sich ablenken zu lassen.
+    </div>
+
+</div><!-- /stage -->
+
+<div class="endcard" id="endcard">
+    <div class="endcard-brand"><span class="brand-bewusst">Bewusst</span><span class="brand-digital">Digital</span><span class="brand-ch" id="brandCh">.ch</span></div>
+    <div class="endcard-claim">Wir begleiten dich zurück ans Steuer.</div>
+</div>
+
 <!-- ============================================================
      JAVASCRIPT – Animation Orchestration (V2: Slide Transition)
      ============================================================ -->
 <script>
 (function() {
     'use strict';
+
+    const C = 2000;                         // calm start before chaos
+    const TRANSITION_START = 3300 + C;      // 5300
+    const ENDCARD_START    = 8400;
+    const ENDCARD_DURATION = 2000;
 
     let timeouts = [];
     function sched(fn, delay) { timeouts.push(setTimeout(fn, delay)); }
@@ -867,6 +986,32 @@ body {
         });
     }
 
+    // ── Meta-notification helpers ──────────────────────────────
+    function showMeta(id) {
+        document.getElementById(id).classList.add('show');
+    }
+    function hideMeta(id) {
+        document.getElementById(id).classList.remove('show');
+    }
+
+    // ── Endcard + phone dimming (scale-up) ────────────────────
+    function showEndcard() {
+        const endcard = document.getElementById('endcard');
+        const endcardClaim = endcard.querySelector('.endcard-claim');
+
+        endcardClaim.style.transition = 'none';
+        endcardClaim.style.opacity = '0';
+
+        document.getElementById('phone').classList.add('dimmed');
+        endcard.classList.add('show');
+
+        sched(() => {
+            endcardClaim.style.transition = 'opacity 500ms ease';
+            endcardClaim.style.opacity = '1';
+            document.getElementById('brandCh').classList.add('show');
+        }, 800);
+    }
+
     // ── Coordinate helper ──────────────────────────────────────
     function toScreenCoords(viewportRect, screenRect, scale) {
         return {
@@ -878,7 +1023,7 @@ body {
     }
 
     // ══════════════════════════════════════════════════════════════
-    //  PHASE 2: SLIDE TRANSITION
+    //  PHASE 2: SLIDE TRANSITION (starts at TRANSITION_START)
     // ══════════════════════════════════════════════════════════════
     function startTransition() {
         const screenEl = document.getElementById('screen');
@@ -887,11 +1032,9 @@ body {
         const screenW = screenEl.offsetWidth;
         const screenH = screenEl.offsetHeight;
 
-        const essentialNames = ['sbb', 'maps', 'telefon', 'nachrichten', 'whatsapp'];
+        const essentialNames = ['sbb', 'maps', 'telefon', 'nachrichten', 'kalender'];
 
-        // ── 1+2. Banners + badges are dismissed together with apps in step 6 ──
-
-        // ── 3. Record source positions of essential apps ──────
+        // Record source positions of essential apps
         const sourceCoords = {};
         const sourceEls = {};
         essentialNames.forEach(name => {
@@ -902,11 +1045,10 @@ body {
             }
         });
 
-        // ── 4. Measure target positions in clean screen ───────
+        // Measure target positions in clean screen
         const cs = document.getElementById('cleanScreen');
         const csApps = cs.querySelectorAll('.app');
 
-        // Temporarily show clean screen for measurement
         const savedStyles = [];
         csApps.forEach(a => {
             savedStyles.push(a.style.cssText);
@@ -926,15 +1068,12 @@ body {
             }
         });
 
-        // Restore clean screen
         cs.classList.remove('visible');
         cs.style.visibility = '';
         cs.style.opacity = '';
         csApps.forEach((a, i) => { a.style.cssText = savedStyles[i]; });
 
-        // ── 5. Prepare clone data (don't show yet) ─────────────
-        //  Store all info needed to create clones later.
-        //  Originals stay visible until non-essential apps are gone.
+        // Prepare clone data
         const cloneData = [];
         essentialNames.forEach(name => {
             const src = sourceEls[name];
@@ -943,22 +1082,19 @@ body {
             cloneData.push({ name, src, sCoords, tCoords });
         });
 
-        // ── 6. Dismiss banners + badges + non-essential apps simultaneously ─
+        // Dismiss banners + badges + non-essential apps simultaneously
         sched(() => {
-            // Banners → fly up
             document.querySelectorAll('.banner').forEach(b => {
                 b.classList.remove('show');
                 b.classList.add('hide');
             });
 
-            // Badges → shrink away
             document.querySelectorAll('.badge.pop').forEach(b => {
-                b.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                b.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
                 b.style.opacity = '0';
                 b.style.transform = 'scale(0)';
             });
 
-            // Non-essential apps → fly to nearest edge
             document.querySelectorAll('.app-grid-wrap .app, .dock .app').forEach(app => {
                 const name = app.dataset.app;
                 if (!name || essentialNames.includes(name)) return;
@@ -979,12 +1115,11 @@ body {
                 else if (minD === dLft) tx = -(coords.left + coords.width + 40);
                 else                    tx = (screenW - coords.left + 40);
 
-                const stagger = Math.random() * 100;
+                const stagger = Math.random() * 80;
                 app.style.transition = `transform 0.7s cubic-bezier(0.55, 0, 1, 0.45) ${stagger}ms`;
                 app.style.transform = `translate(${tx}px, ${ty}px)`;
             });
 
-            // Fade out dock background
             const dock = document.getElementById('dock');
             dock.style.transition = 'background 0.6s ease, backdrop-filter 0.6s ease, -webkit-backdrop-filter 0.6s ease';
             dock.style.background = 'transparent';
@@ -992,22 +1127,19 @@ body {
             dock.style.webkitBackdropFilter = 'none';
         }, 200);
 
-        // ── 7. Background crossfade ───────────────────────────
+        // Background crossfade
         sched(() => {
             const wc = document.getElementById('wallpaperCalm');
-            wc.style.transition = 'opacity 2.5s ease';
+            wc.style.transition = 'opacity 2.2s ease';
             wc.classList.add('visible');
         }, 200);
 
-        // ── 8. Create clones + fly + color morph ─────────────────
-        //  Wait until non-essential apps are gone (~1100ms),
-        //  then create clones, hide originals, and start flight.
+        // Create clones + fly + color morph
         sched(() => {
             cloneData.forEach(({ name, src, sCoords, tCoords }) => {
                 const dx = tCoords.left - sCoords.left;
                 const dy = tCoords.top - sCoords.top;
 
-                // Flying container
                 const container = document.createElement('div');
                 container.classList.add('flying-clone');
                 container.setAttribute('data-fly', name);
@@ -1019,7 +1151,6 @@ body {
                 container.style.transition = 'none';
                 container.style.transform = 'translate(0px, 0px)';
 
-                // Layer 1: Colored original (visible)
                 const colored = src.cloneNode(true);
                 colored.removeAttribute('data-app');
                 colored.removeAttribute('data-essential');
@@ -1029,7 +1160,6 @@ body {
                 colored.style.transform = 'none';
                 colored.style.opacity = '1';
 
-                // Layer 2: Glass version (hidden, overlaps colored)
                 const glass = src.cloneNode(true);
                 glass.removeAttribute('data-app');
                 glass.removeAttribute('data-essential');
@@ -1045,33 +1175,23 @@ body {
                 container.appendChild(glass);
                 screenEl.appendChild(container);
 
-                // Hide original
                 src.style.transition = 'none';
                 src.style.opacity = '0';
 
-                // Force layout, then start flight + morph
                 void container.offsetHeight;
-                container.style.transition = 'transform 1.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                container.style.transition = 'transform 1.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
                 container.style.transform = `translate(${dx}px, ${dy}px)`;
 
-                colored.style.transition = 'opacity 1.6s ease';
+                colored.style.transition = 'opacity 1.4s ease';
                 colored.style.opacity = '0';
 
-                glass.style.transition = 'opacity 1.6s ease';
+                glass.style.transition = 'opacity 1.4s ease';
                 glass.style.opacity = '1';
             });
-        }, 1100);
+        }, 900);
 
-        // ── 9. Brand text fade-in ─────────────────────────────
+        // Clean screen — when apps have landed (900+1600=2500ms)
         sched(() => {
-            document.getElementById('brandText').classList.add('visible');
-        }, 1400);
-
-        // ── 10. Show clean screen + cleanup ───────────────────
-        //  After flight lands (1100+1800=2900ms) + small buffer:
-        //  Show actual clean screen, remove clones.
-        sched(() => {
-            // Show clean screen (instant, no fade – clones already show glass)
             cs.style.transition = 'none';
             cs.style.opacity = '1';
             cs.classList.add('visible');
@@ -1081,19 +1201,12 @@ body {
                 a.style.transform = 'none';
             });
 
-            // Remove clones
             document.querySelectorAll('.flying-clone').forEach(c => c.remove());
 
-            // Hide chaos layer
             document.getElementById('gridWrap').style.opacity = '0';
             document.getElementById('dock').style.opacity = '0';
             document.getElementById('wallpaperStress').style.opacity = '0';
-        }, 3100);
-
-        // ── 11. Enable restart ────────────────────────────────
-        sched(() => {
-            document.getElementById('restartBtn').classList.add('visible');
-        }, 3700);
+        }, 2600);
     }
 
     // ══════════════════════════════════════════════════════════════
@@ -1102,10 +1215,8 @@ body {
     function resetAll() {
         clearAll();
 
-        // Remove flying clones
         document.querySelectorAll('.flying-clone').forEach(c => c.remove());
 
-        // Badges
         document.querySelectorAll('.badge').forEach(b => {
             b.classList.remove('pop', 'update');
             b.style.cssText = '';
@@ -1113,15 +1224,12 @@ body {
             b.textContent = '';
         });
 
-        // Banners
         document.getElementById('bannerLayer').innerHTML = '';
 
-        // All apps in grid + dock
         document.querySelectorAll('.app-grid-wrap .app, .dock .app').forEach(a => {
             a.style.cssText = '';
         });
 
-        // Clean screen
         const cs = document.getElementById('cleanScreen');
         cs.classList.remove('visible');
         cs.style.cssText = '';
@@ -1129,21 +1237,30 @@ body {
             a.style.cssText = '';
         });
 
-        // Wallpapers
         const wc = document.getElementById('wallpaperCalm');
         wc.classList.remove('visible');
         wc.style.cssText = '';
         document.getElementById('wallpaperStress').style.cssText = '';
 
-        // Brand text
-        document.getElementById('brandText').classList.remove('visible');
-
-        // Grid & dock
         document.getElementById('gridWrap').style.cssText = '';
         document.getElementById('dock').style.cssText = '';
 
-        // Restart
         document.getElementById('restartBtn').classList.remove('visible');
+
+        // Meta-notifications
+        document.getElementById('metaLeft').classList.remove('show');
+        document.getElementById('metaRight').classList.remove('show');
+
+        // Endcard
+        const ec = document.getElementById('endcard');
+        ec.classList.remove('show');
+        ec.style.cssText = '';
+        ec.querySelector('.endcard-brand').style.cssText = '';
+        ec.querySelector('.endcard-claim').style.cssText = '';
+        document.getElementById('brandCh').classList.remove('show');
+
+        // Phone dimming
+        document.getElementById('phone').classList.remove('dimmed');
     }
 
     // ══════════════════════════════════════════════════════════════
@@ -1152,65 +1269,79 @@ body {
     function startAnimation() {
         resetAll();
 
-        // PHASE 1: Notification flood (0 – 2300ms)
-        sched(() => showBadge('whatsapp', 1),     0);
-        sched(() => showBadge('instagram', 1),    100);
-        sched(() => showBadge('mail', 3),         190);
-        sched(() => showBadge('tiktok', 1),       260);
-        sched(() => showBadge('nachrichten', 1),  350);
-        sched(() => addBanner('#25D366', 'W', 'WhatsApp', 'Marco: Hey, hast du heute Abend Zeit?'), 350);
-        sched(() => showBadge('x', 2),            440);
-        sched(() => showBadge('youtube', 1),      530);
-        sched(() => showBadge('telefon', 2),      560);
-        sched(() => addBanner('linear-gradient(135deg,#F9CE34,#EE2A7B,#6228D7)', '◻', 'Instagram', '@sarah_m hat dein Foto geliked +3 weitere'), 610);
-        sched(() => showBadge('nzz', 1),          680);
-        sched(() => showBadge('spotify', 1),      740);
-        sched(() => showBadge('netflix', 1),      790);
-        sched(() => showBadge('whatsapp', 5),     830);
-        sched(() => showBadge('instagram', 8),    900);
-        sched(() => addBanner('#F5F5F0', '<span style="color:#1a1a1a;font-family:Georgia,serif;font-weight:700">N</span>', 'NZZ', 'BREAKING: Neue Entwicklungen im Bundesrat'), 960);
-        sched(() => showBadge('zalando', 1),      1010);
-        sched(() => showBadge('migros', 1),       1070);
-        sched(() => showBadge('mail', 8),         1120);
-        sched(() => showBadge('nachrichten', 3),  1170);
-        sched(() => showBadge('kalender', 3),     1220);
-        sched(() => addBanner('#010101', '<span style="color:#FE2C55">♪</span>', 'TikTok', 'Dein Video hat 1.2K Views erreicht 🎉'), 1320);
-        sched(() => showBadge('tiktok', 7),       1360);
-        sched(() => showBadge('whatsapp', 14),    1410);
-        sched(() => showBadge('youtube', 3),      1440);
-        sched(() => showBadge('x', 8),            1480);
-        sched(() => showBadge('telefon', 5),      1530);
-        sched(() => addBanner('linear-gradient(180deg,#5AC8FA,#007AFF)', '✉', 'Mail', 'Amazon: Ihre Bestellung wurde versendet'), 1580);
-        sched(() => showBadge('instagram', 23),   1630);
-        sched(() => showBadge('nzz', 5),          1670);
-        sched(() => showBadge('spotify', 2),      1700);
-        sched(() => addBanner('linear-gradient(180deg,#69F076,#42C84E)', '💬', 'Nachrichten', 'Mama: Rufst du mich bitte an? 📞'), 1760);
-        sched(() => showBadge('whatsapp', 34),    1800);
-        sched(() => showBadge('nachrichten', 7),  1850);
-        sched(() => showBadge('mail', 16),        1890);
-        sched(() => addBanner('linear-gradient(180deg,#FF3B30,#FF453A)', '▶', 'YouTube', 'PewDiePie hat ein neues Video hochgeladen'), 1920);
-        sched(() => showBadge('tiktok', 15),      1980);
-        sched(() => showBadge('whatsapp', 52),    2020);
-        sched(() => showBadge('netflix', 3),      2040);
-        sched(() => showBadge('instagram', 47),   2060);
-        sched(() => showBadge('x', 19),           2100);
-        sched(() => showBadge('youtube', 8),      2140);
-        sched(() => addBanner('linear-gradient(135deg,#FF6B00,#FF2D87)', '🛍', 'Zalando', 'Flash Sale: 50% auf alles – nur noch 2h!'), 2150);
-        sched(() => showBadge('whatsapp', 99),    2180);
-        sched(() => showBadge('kalender', 5),     2200);
-        sched(() => showBadge('zalando', 3),      2220);
-        sched(() => showBadge('telefon', 8),      2230);
-        sched(() => showBadge('migros', 2),       2250);
-        sched(() => showBadge('nachrichten', 12), 2270);
-        sched(() => showBadge('mail', 24),        2300);
+        // PHASE 1: Chaos – Notification flood (C+0 – C+2300ms)
+        sched(() => showBadge('whatsapp', 1),     C);
+        sched(() => showBadge('instagram', 1),    C+100);
+        sched(() => showBadge('mail', 3),         C+190);
+        sched(() => showBadge('tiktok', 1),       C+260);
+        sched(() => showBadge('nachrichten', 1),  C+350);
+        sched(() => addBanner('#25D366', 'W', 'WhatsApp', 'Marco: Hey, hast du heute Abend Zeit?'), C+350);
+        sched(() => showBadge('x', 2),            C+440);
+        sched(() => showBadge('youtube', 1),      C+530);
+        sched(() => showBadge('telefon', 2),      C+560);
+        sched(() => addBanner('linear-gradient(135deg,#F9CE34,#EE2A7B,#6228D7)', '◻', 'Instagram', '@sarah_m hat dein Foto geliked +3 weitere'), C+610);
+        sched(() => showBadge('nzz', 1),          C+680);
+        sched(() => showBadge('spotify', 1),      C+740);
+        sched(() => showBadge('netflix', 1),      C+790);
+        sched(() => showBadge('whatsapp', 5),     C+830);
+        sched(() => showBadge('instagram', 8),    C+900);
+        sched(() => addBanner('#F5F5F0', '<span style="color:#1a1a1a;font-family:Georgia,serif;font-weight:700">N</span>', 'NZZ', 'BREAKING: Neue Entwicklungen im Bundesrat'), C+960);
+        sched(() => showBadge('zalando', 1),      C+1010);
+        sched(() => showBadge('migros', 1),       C+1070);
+        sched(() => showBadge('mail', 8),         C+1120);
+        sched(() => showBadge('nachrichten', 3),  C+1170);
+        sched(() => showBadge('kalender', 3),     C+1220);
+        sched(() => addBanner('#010101', '<span style="color:#FE2C55">♪</span>', 'TikTok', 'Dein Video hat 1.2K Views erreicht 🎉'), C+1320);
+        sched(() => showBadge('tiktok', 7),       C+1360);
+        sched(() => showBadge('whatsapp', 14),    C+1410);
+        sched(() => showBadge('youtube', 3),      C+1440);
+        sched(() => showBadge('x', 8),            C+1480);
+        sched(() => showBadge('telefon', 5),      C+1530);
+        sched(() => addBanner('linear-gradient(180deg,#5AC8FA,#007AFF)', '✉', 'Mail', 'Amazon: Ihre Bestellung wurde versendet'), C+1580);
+        sched(() => showBadge('instagram', 23),   C+1630);
+        sched(() => showBadge('nzz', 5),          C+1670);
+        sched(() => showBadge('spotify', 2),      C+1700);
+        sched(() => addBanner('linear-gradient(180deg,#69F076,#42C84E)', '💬', 'Nachrichten', 'Mama: Rufst du mich bitte an? 📞'), C+1760);
+        sched(() => showBadge('whatsapp', 34),    C+1800);
+        sched(() => showBadge('nachrichten', 7),  C+1850);
+        sched(() => showBadge('mail', 16),        C+1890);
+        sched(() => addBanner('linear-gradient(180deg,#FF3B30,#FF453A)', '▶', 'YouTube', 'PewDiePie hat ein neues Video hochgeladen'), C+1920);
+        sched(() => showBadge('tiktok', 15),      C+1980);
+        sched(() => showBadge('whatsapp', 52),    C+2020);
+        sched(() => showBadge('netflix', 3),      C+2040);
+        sched(() => showBadge('instagram', 47),   C+2060);
+        sched(() => showBadge('x', 19),           C+2100);
+        sched(() => showBadge('youtube', 8),      C+2140);
+        sched(() => addBanner('linear-gradient(135deg,#FF6B00,#FF2D87)', '🛍', 'Zalando', 'Flash Sale: 50% auf alles – nur noch 2h!'), C+2150);
+        sched(() => showBadge('whatsapp', 99),    C+2180);
+        sched(() => showBadge('kalender', 5),     C+2200);
+        sched(() => showBadge('zalando', 3),      C+2220);
+        sched(() => showBadge('telefon', 8),      C+2230);
+        sched(() => showBadge('migros', 2),       C+2250);
+        sched(() => showBadge('nachrichten', 12), C+2270);
+        sched(() => showBadge('mail', 24),        C+2300);
 
-        // PHASE 2: Slide Transition (ab 3800ms – 1500ms Pause nach letztem Badge)
-        sched(() => startTransition(), 3800);
+        // Meta-notifications
+        sched(() => showMeta('metaLeft'),  C+1000);
+        sched(() => showMeta('metaRight'), C+2200);
+        sched(() => hideMeta('metaLeft'),  C+2400);
+        sched(() => hideMeta('metaRight'), C+3900);
+
+        // PHASE 2: Slide Transition
+        sched(() => startTransition(), TRANSITION_START);
+
+        // PHASE 3: Endcard
+        sched(showEndcard, ENDCARD_START);
+
+        // Enable restart after endcard
+        sched(() => {
+            document.getElementById('restartBtn').classList.add('visible');
+        }, ENDCARD_START + ENDCARD_DURATION);
     }
 
     // ── Init ───────────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(startAnimation, 600);
+        startAnimation();
 
         document.getElementById('phone').addEventListener('click', () => {
             startAnimation();
